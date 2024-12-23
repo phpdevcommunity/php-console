@@ -1,0 +1,27 @@
+{
+  "name": "phpdevcommunity/php-console",
+  "description": "A lightweight PHP library designed to simplify command handling in console applications.",
+  "version": "1.0.0",
+  "type": "package",
+  "autoload": {
+    "psr-4": {
+      "PhpDevCommunity\\Console\\": "src",
+      "Test\\PhpDevCommunity\\Console\\": "tests"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "ext-mbstring": "*",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "phpdevcommunity/unitester": "^0.1.0@alpha"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "F. Michel",
+      "homepage": "https://www.phpdevcommunity.com"
+    }
+  ]
+}
