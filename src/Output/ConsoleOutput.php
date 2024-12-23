@@ -3,7 +3,9 @@
 namespace PhpDevCommunity\Console\Output;
 
 
+use InvalidArgumentException;
 use PhpDevCommunity\Console\OutputInterface;
+use RuntimeException;
 
 final class ConsoleOutput implements OutputInterface
 {
@@ -80,20 +82,20 @@ final class ConsoleOutput implements OutputInterface
         $titleLength = mb_strlen($message);
         $underline = str_repeat('=', min($consoleWidth, $titleLength));
 
-        $this->writeColor(PHP_EOL);
-        $this->writeColor($message);
-        $this->writeColor(PHP_EOL);
-        $this->writeColor($underline);
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
+        $this->write($message);
+        $this->write(PHP_EOL);
+        $this->write($underline);
+        $this->write(PHP_EOL);
     }
 
     public function list(array $items): void
     {
         foreach ($items as $item) {
-            $this->writeColor('- ' . $item);
-            $this->writeColor(PHP_EOL);
+            $this->write('- ' . $item);
+            $this->write(PHP_EOL);
         }
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
     }
 
     public function listKeyValues(array $items, bool $inlined = false): void
@@ -111,17 +113,17 @@ final class ConsoleOutput implements OutputInterface
         foreach ($items as $key => $value) {
             $key = str_pad($key, $maxKeyLength, ' ', STR_PAD_RIGHT);
             $this->writeColor($key, 'green');
-            $this->writeColor(' : ');
+            $this->write(' : ');
             $this->writeColor($value, 'white');
-            $this->writeColor(PHP_EOL);
+            $this->write(PHP_EOL);
         }
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
     }
 
     public function indentedList(array $items, int $indentLevel = 1): void
     {
         if ($indentLevel == 1) {
-            $this->writeColor(PHP_EOL);
+            $this->write(PHP_EOL);
         }
 
         foreach ($items as $item) {
@@ -134,12 +136,12 @@ final class ConsoleOutput implements OutputInterface
                 }
                 $this->writeColor($indentation . '- ', 'red');
                 $this->writeColor($item, 'white');
-                $this->writeColor(PHP_EOL);
+                $this->write(PHP_EOL);
             }
         }
 
         if ($indentLevel == 1) {
-            $this->writeColor(PHP_EOL);
+            $this->write(PHP_EOL);
         }
     }
 
@@ -148,36 +150,57 @@ final class ConsoleOutput implements OutputInterface
         foreach ($items as $index => $item) {
             $this->writeColor(($index + 1) . '. ', 'white');
             $this->writeColor($item, 'green');
-            $this->writeColor(PHP_EOL);
+            $this->write(PHP_EOL);
         }
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
     }
 
     public function table(array $headers, array $rows): void
     {
+        $maxWidth = $this->geTerminalWidth();
+        $maxWidthPerColumn = $maxWidth / count($headers);
         $columnWidths = array_map(function ($header) {
             return mb_strlen($header);
         }, $headers);
 
+        $processedRows = [];
         foreach ($rows as $row) {
+            $row = array_values($row);
+            $processedRow = [];
             foreach ($row as $index => $column) {
-                $columnWidths[$index] = max($columnWidths[$index], mb_strlen($column));
+                $column = $this->variableToString($column);
+                $lines = explode(PHP_EOL, trim($column));
+                foreach ($lines as $i => $line) {
+                    $maxWidth = max($columnWidths[$index], mb_strlen($line));
+                    if ($maxWidth > $maxWidthPerColumn) {
+                        $maxWidth = $maxWidthPerColumn;
+                    }
+                    $columnWidths[$index] = $maxWidth;
+                    if (mb_strlen($line) > $maxWidth) {
+                        $lines[$i] = mb_substr($line, 0, $maxWidth) . '...';
+                    }
+                }
+                $processedRow[$index] = $lines;
             }
+            $processedRows[] = $processedRow;
         }
 
         foreach ($headers as $index => $header) {
-            $this->writeColor(str_pad($header, $columnWidths[$index] + 2));
+            $this->write(str_pad($header, $columnWidths[$index] + 2));
         }
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
+        $this->write(str_repeat('-', array_sum($columnWidths) + count($columnWidths) * 2));
+        $this->write(PHP_EOL);
 
-        $this->writeColor(str_repeat('-', array_sum($columnWidths) + count($columnWidths) * 2));
-        $this->writeColor(PHP_EOL);
-
-        foreach ($rows as $row) {
-            foreach ($row as $index => $column) {
-                $this->writeColor(str_pad($column, $columnWidths[$index] + 2));
+        foreach ($processedRows as $row) {
+            $maxLines = max(array_map('count', $row));
+            for ($lineIndex = 0; $lineIndex < $maxLines; $lineIndex++) {
+                foreach ($row as $index => $lines) {
+                    $line = $lines[$lineIndex] ?? ''; // Récupère la ligne actuelle ou une chaîne vide
+                    $this->write(str_pad($line, $columnWidths[$index] + 2));
+                }
+                $this->write(PHP_EOL);
             }
-            $this->writeColor(PHP_EOL);
         }
     }
 
@@ -186,9 +209,9 @@ final class ConsoleOutput implements OutputInterface
         $barWidth = 50;
         $progress = ($current / $total) * $barWidth;
         $bar = str_repeat('#', (int)$progress) . str_repeat(' ', $barWidth - (int)$progress);
-        $this->writeColor(sprintf("\r[%s] %d%%", $bar, ($current / $total) * 100));
+        $this->write(sprintf("\r[%s] %d%%", $bar, ($current / $total) * 100));
         if ($current === $total) {
-            $this->writeColor(PHP_EOL);
+            $this->write(PHP_EOL);
         }
     }
 
@@ -209,12 +232,12 @@ final class ConsoleOutput implements OutputInterface
 
         if ($hidden) {
             if (strncasecmp(PHP_OS, 'WIN', 3) == 0) {
-                throw new \RuntimeException('Windows platform is not supported for hidden input');
+                throw new RuntimeException('Windows platform is not supported for hidden input');
             } else {
                 system('stty -echo');
                 $input = trim(fgets(STDIN));
                 system('stty echo');
-                $this->writeColor(PHP_EOL);
+                $this->write(PHP_EOL);
             }
         } else {
             $handle = fopen('php://stdin', 'r');
@@ -223,7 +246,7 @@ final class ConsoleOutput implements OutputInterface
         }
 
         if ($required && empty($input)) {
-            throw new \InvalidArgumentException('Response cannot be empty');
+            throw new InvalidArgumentException('Response cannot be empty');
         }
 
         return $input;
@@ -235,11 +258,11 @@ final class ConsoleOutput implements OutputInterface
         $time = microtime(true);
         while ((microtime(true) - $time) < $duration) {
             foreach ($spinnerChars as $char) {
-                $this->writeColor("\r$char");
+                $this->write("\r$char");
                 usleep(100000);
             }
         }
-        $this->writeColor("\r");
+        $this->write("\r");
     }
 
     public function json(array $data): void
@@ -250,12 +273,12 @@ final class ConsoleOutput implements OutputInterface
             $this->writeColor("Error encoding JSON: " . json_last_error_msg() . PHP_EOL, 'red');
             return;
         }
-        $this->writeColor($jsonOutput . PHP_EOL);
+        $this->write($jsonOutput . PHP_EOL);
     }
 
     public function boxed(string $message, string $borderChar = '*', int $padding = 1): void
     {
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
         $lineLength = mb_strlen($message);
         $boxWidth = $this->geTerminalWidth();
         if ($lineLength > $boxWidth) {
@@ -264,13 +287,13 @@ final class ConsoleOutput implements OutputInterface
         $lines = explode('|', wordwrap($message, $lineLength, '|', true));
         $border = str_repeat($borderChar, $lineLength + ($padding * 2) + 2);
 
-        $this->writeColor($border . PHP_EOL);
+        $this->write($border . PHP_EOL);
         foreach ($lines as $line) {
             $strPad = str_repeat(' ', $padding);
-            $this->writeColor($borderChar . $strPad . str_pad($line, $lineLength) . $strPad . $borderChar . PHP_EOL);
+            $this->write($borderChar . $strPad . str_pad($line, $lineLength) . $strPad . $borderChar . PHP_EOL);
         }
-        $this->writeColor($border . PHP_EOL);
-        $this->writeColor(PHP_EOL);
+        $this->write($border . PHP_EOL);
+        $this->write(PHP_EOL);
     }
 
     public function writeColor(string $message, ?string $color = null, ?string $background = null): void
@@ -302,9 +325,9 @@ final class ConsoleOutput implements OutputInterface
 
     private function outputMessage($formattedMessage, int $lineLength, string $color): void
     {
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
         $this->writeColor(str_repeat(' ', $lineLength), 'white', $color);
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
 
         if (is_string($formattedMessage)) {
             $formattedMessage = [$formattedMessage];
@@ -314,10 +337,10 @@ final class ConsoleOutput implements OutputInterface
             $this->writeColor($line, 'white', $color);
         }
 
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
         $this->writeColor(str_repeat(' ', $lineLength), 'white', $color);
-        $this->writeColor(PHP_EOL);
-        $this->writeColor(PHP_EOL);
+        $this->write(PHP_EOL);
+        $this->write(PHP_EOL);
     }
 
     private function formatMessage(string $prefix, string $message, string $color): array
@@ -335,8 +358,30 @@ final class ConsoleOutput implements OutputInterface
         }
         return [$formattedMessage, $lineLength, $color];
     }
+
     private function geTerminalWidth(): int
     {
         return ((int)exec('tput cols') ?? 85 - 5);
+    }
+
+    private function variableToString($variable): string
+    {
+        if (is_object($variable)) {
+            return 'Object: ' . get_class($variable);
+        } elseif (is_array($variable)) {
+            $variables = [];
+            foreach ($variable as $item) {
+                $variables[] = $this->variableToString($item);
+            }
+            return var_export($variables, true);
+        } elseif (is_resource($variable)) {
+            return (string)$variable;
+        } elseif (is_null($variable)) {
+            return 'NULL';
+        } elseif (is_string($variable)) {
+            return $variable;
+        }
+
+        return var_export($variable, true);
     }
 }
