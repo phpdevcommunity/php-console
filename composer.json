@@ -1,7 +1,6 @@
 {
   "name": "phpdevcommunity/php-console",
   "description": "A lightweight PHP library designed to simplify command handling in console applications.",
-  "version": "1.0.0",
   "type": "package",
   "autoload": {
     "psr-4": {
