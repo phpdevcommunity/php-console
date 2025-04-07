@@ -50,18 +50,29 @@ final class CommandRunner
                 return self::CLI_SUCCESS;
             }
 
-            $command = null;
+            $commands = [];
             foreach ($this->commands as $currentCommand) {
-                if ($currentCommand->getName() === $commandParser->getCommandName()) {
-                    $command = $currentCommand;
-                    break;
+                if (self::stringStartsWith($currentCommand->getName(), $commandParser->getCommandName())) {
+                    $commands[] = $currentCommand;
                 }
             }
 
-            if ($command === null) {
+            if (empty($commands)) {
                 throw new InvalidArgumentException(sprintf('Command "%s" is not defined.', $commandParser->getCommandName()));
             }
 
+            if (count($commands) > 1) {
+                $names = [];
+                foreach ($commands as $command) {
+                    $names[$command->getName()] = $command->getDescription();
+                }
+                $consoleOutput = new ConsoleOutput($output);
+                $consoleOutput->error(sprintf('Command "%s" is ambiguous.', $commandParser->getCommandName()));
+                $consoleOutput->listKeyValues($names, true);
+                return self::CLI_ERROR;
+            }
+
+            $command = $commands[0];
             if ($commandParser->hasOption('help')) {
                 $this->showCommandHelp($command, $output);
                 return self::CLI_SUCCESS;
@@ -151,5 +162,10 @@ final class CommandRunner
             $options[$name] = $option->getDescription();
         }
         $consoleOutput->listKeyValues($options, true);
+    }
+
+    private static function stringStartsWith(string $haystack, string $needle): bool
+    {
+        return substr($haystack, 0, strlen($needle)) === $needle;
     }
 }
