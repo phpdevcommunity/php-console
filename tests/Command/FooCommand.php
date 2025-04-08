@@ -31,7 +31,7 @@ class FooCommand implements CommandInterface
     public function getArguments(): array
     {
         return [
-            new CommandArgument('input', false, null, 'The input file for the foo operation')
+            new CommandArgument('input', false, 'none', 'The input file for the foo operation')
         ];
     }
 

@@ -71,7 +71,7 @@ class InputTest extends TestCase
 
     public function testGetArgumentValue()
     {
-        $input = new Input('test', [], ['argument' => 'value']);
+        $input = new Input('test', [], ['--argument' => 'value']);
         $this->assertEquals('value', $input->getArgumentValue('argument'));
         $this->expectException(\InvalidArgumentException::class, function () use ($input) {
             $input->getArgumentValue('invalid');
@@ -80,7 +80,7 @@ class InputTest extends TestCase
 
     public function testHasArgument()
     {
-        $input = new Input('test', [], ['argument' => 'value']);
+        $input = new Input('test', [], ['--argument' => 'value']);
         $this->assertTrue($input->hasArgument('argument'));
         $this->assertFalse($input->hasArgument('invalid'));
     }

@@ -94,6 +94,11 @@ final class CommandRunner
         $argvOptions = [];
 
         $options = $command->getOptions();
+        foreach ($options as $option) {
+            if ($option->isFlag()) {
+                $argvOptions["--{$option->getName()}"] = false;
+            }
+        }
         foreach ($commandParser->getOptions() as $name => $value) {
             $hasOption = false;
             foreach ($options as $option) {
@@ -121,6 +126,8 @@ final class CommandRunner
             }
             if ($commandParser->hasArgument($key)) {
                 $argv["--{$argument->getName()}"] = $commandParser->getArgumentValue($key);
+            }else {
+                $argv["--{$argument->getName()}"] = $argument->getDefaultValue();
             }
         }
 

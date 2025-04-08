@@ -39,7 +39,6 @@ final class Input implements InputInterface
         if (!self::startsWith($name, '--')) {
             $name = "--$name";
         }
-
         return array_key_exists($name, $this->options);
     }
 
@@ -57,6 +56,9 @@ final class Input implements InputInterface
 
     public function getArgumentValue(string $name)
     {
+        if (!self::startsWith($name, '--')) {
+            $name = "--$name";
+        }
         if (!$this->hasArgument($name)) {
             throw new \InvalidArgumentException(sprintf('Argument "%s" is not defined.', $name));
         }
@@ -65,6 +67,9 @@ final class Input implements InputInterface
 
     public function hasArgument(string $name): bool
     {
+        if (!self::startsWith($name, '--')) {
+            $name = "--$name";
+        }
         return array_key_exists($name, $this->arguments);
     }
 
