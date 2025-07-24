@@ -28,10 +28,10 @@ if (file_exists(dirname(__DIR__) . '/../../autoload.php')) {
 // $container = $kernel->getContainer();
 // $app = $container->get(CommandRunner::class);
 
-$app = new CommandRunner([
+$runner = new CommandRunner([
     new FooCommand(),
 ]);
-$exitCode = $app->run(new CommandParser(), new Output());
+$exitCode = $runner->run(new CommandParser(), new Output());
 exit($exitCode);
 
 

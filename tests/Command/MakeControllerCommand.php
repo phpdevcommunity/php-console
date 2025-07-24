@@ -8,37 +8,32 @@ use PhpDevCommunity\Console\InputInterface;
 use PhpDevCommunity\Console\Option\CommandOption;
 use PhpDevCommunity\Console\OutputInterface;
 
-class FooCommand implements CommandInterface
+class MakeControllerCommand implements CommandInterface
 {
     public function getName(): string
     {
-        return 'foo';
+        return 'make:controller';
     }
 
     public function getDescription(): string
     {
-        return 'Performs the foo operation with optional parameters.';
+        return 'TEST : Make a new controller';
     }
 
     public function getOptions(): array
     {
         return [
-            new CommandOption('verbose', 'v', 'Enable verbose output', true),
-            new CommandOption('output', 'o', 'Specify output file', false)
         ];
     }
 
     public function getArguments(): array
     {
         return [
-            new CommandArgument('input', false, 'none', 'The input file for the foo operation')
         ];
     }
 
     public function execute(InputInterface $input, OutputInterface $output): void
     {
-        $output->writeln('Test OK');
-        $output->writeln('ARGUMENTS: ' . json_encode($input->getArguments()));
-        $output->writeln('OPTIONS: ' . json_encode($input->getOptions()));
+        $output->write('Test OK : Make a new controller');
     }
 }

@@ -5,6 +5,7 @@ namespace PhpDevCommunity\Console;
 use InvalidArgumentException;
 use PhpDevCommunity\Console\Command\CommandInterface;
 use PhpDevCommunity\Console\Command\HelpCommand;
+use PhpDevCommunity\Console\Option\CommandOption;
 use PhpDevCommunity\Console\Output\ConsoleOutput;
 use Throwable;
 use const PHP_EOL;
@@ -13,6 +14,9 @@ final class CommandRunner
 {
     const CLI_ERROR = 1;
     const CLI_SUCCESS = 0;
+    public const CLI_COMMAND_NOT_FOUND = 10;    // Aucune commande trouvée
+    public const CLI_INVALID_ARGUMENTS = 11;    // Arguments invalides
+    public const CLI_AMBIGUOUS_COMMAND = 12;    // Plusieurs correspondances possibles
 
     /**
      * @var CommandInterface[]
@@ -58,7 +62,7 @@ final class CommandRunner
             }
 
             if (empty($commands)) {
-                throw new InvalidArgumentException(sprintf('Command "%s" is not defined.', $commandParser->getCommandName()));
+                throw new InvalidArgumentException(sprintf('Command "%s" is not defined.', $commandParser->getCommandName()), self::CLI_COMMAND_NOT_FOUND);
             }
 
             if (count($commands) > 1) {
@@ -69,7 +73,7 @@ final class CommandRunner
                 $consoleOutput = new ConsoleOutput($output);
                 $consoleOutput->error(sprintf('Command "%s" is ambiguous.', $commandParser->getCommandName()));
                 $consoleOutput->listKeyValues($names, true);
-                return self::CLI_ERROR;
+                return self::CLI_AMBIGUOUS_COMMAND;
             }
 
             $command = $commands[0];
@@ -84,7 +88,7 @@ final class CommandRunner
 
         } catch (Throwable $e) {
             (new ConsoleOutput($output))->error($e->getMessage());
-            return self::CLI_ERROR;
+            return in_array($e->getCode(), [self::CLI_COMMAND_NOT_FOUND, self::CLI_INVALID_ARGUMENTS]) ? $e->getCode() : self::CLI_ERROR;
         }
 
     }
@@ -92,8 +96,24 @@ final class CommandRunner
     private function execute(CommandInterface $command, CommandParser $commandParser, OutputInterface $output)
     {
         $argvOptions = [];
-
         $options = $command->getOptions();
+        $forbidden = ['help', 'h', 'verbose', 'v'];
+        foreach ($options as $option) {
+            $name     = $option->getName();
+            $shortcut = $option->getShortcut();
+            if (in_array($name, $forbidden, true) || ($shortcut !== null && in_array($shortcut, $forbidden, true))) {
+                $invalid = in_array($name, $forbidden, true) ? $name : $shortcut;
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'The option "%s" is reserved and cannot be used with the "%s" command.',
+                        $invalid,
+                        $command->getName()
+                    )
+                );
+            }
+        }
+
+        $options[] = new CommandOption('verbose', 'v', 'Enable verbose output', true);
         foreach ($options as $option) {
             if ($option->isFlag()) {
                 $argvOptions["--{$option->getName()}"] = false;
@@ -135,7 +155,20 @@ final class CommandRunner
             throw new InvalidArgumentException(sprintf('Too many arguments for command "%s". Expected %d, got %d.', $command->getName(), count($arguments), count($commandParser->getArguments())));
         }
 
-        $command->execute(new Input($commandParser->getCommandName(), $argvOptions, $argv), $output);
+        $startTime = microtime(true);
+        $input = new Input($commandParser->getCommandName(), $argvOptions, $argv);
+        $command->execute($input, $output);
+        $endTime    = microtime(true);
+        $peakMemoryBytes            = memory_get_peak_usage(true);
+        $peakMemoryMB               = round($peakMemoryBytes / 1024 / 1024, 2);
+        $duration                   = round($endTime - $startTime, 2);
+        if ($input->getOptionValue('verbose')) {
+            $output->writeln(sprintf(
+                'Execution time: %.2fs; Peak memory usage: %.2f MB',
+                $duration,
+                $peakMemoryMB
+            ));
+        }
     }
 
     private function showCommandHelp(CommandInterface $selectedCommand, OutputInterface $output): void
@@ -171,8 +204,18 @@ final class CommandRunner
         $consoleOutput->listKeyValues($options, true);
     }
 
-    private static function stringStartsWith(string $haystack, string $needle): bool
+    private static function stringStartsWith(string $command, string $input): bool
     {
-        return substr($haystack, 0, strlen($needle)) === $needle;
+        $commandParts = explode(':', $command);
+        $inputParts = explode(':', $input);
+        foreach ($inputParts as $i => $inPart) {
+            $cmdPart = $commandParts[$i] ?? null;
+
+            if ($cmdPart === null || strpos($cmdPart, $inPart) !== 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

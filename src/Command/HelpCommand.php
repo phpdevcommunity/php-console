@@ -5,6 +5,7 @@ namespace PhpDevCommunity\Console\Command;
 
 
 use PhpDevCommunity\Console\InputInterface;
+use PhpDevCommunity\Console\Option\CommandOption;
 use PhpDevCommunity\Console\Output;
 use PhpDevCommunity\Console\OutputInterface;
 
@@ -44,6 +45,22 @@ class HelpCommand implements CommandInterface
             $commands[$command->getName()] = $command->getDescription();
         }
         $io->listKeyValues($commands, true);
+
+        $io->writeColor('Options:', 'yellow');
+        $io->write(PHP_EOL);
+        $options = [];
+        foreach ([new CommandOption('help', 'h', 'Display this help message.', true), new CommandOption('verbose', 'v', 'Enable verbose output', true)] as $option) {
+            $name = sprintf('--%s', $option->getName());
+            if ($option->getShortcut() !== null) {
+                $name = sprintf('-%s, --%s', $option->getShortcut(), $option->getName());
+            }
+
+            if (!$option->isFlag()) {
+                $name = sprintf('%s=VALUE', $name);
+            }
+            $options[$name] = $option->getDescription();
+        }
+        $io->listKeyValues($options, true);
     }
 
     /**
