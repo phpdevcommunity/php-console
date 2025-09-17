@@ -9,9 +9,20 @@ final class CommandArgument
     private $defaultValue;
     private ?string $description;
 
-    public function __construct(string $name, bool $isRequired = false, $defaultValue = null, ?string $description = null)
+    public  function __construct(string $name, bool $isRequired = false, $defaultValue = null, ?string $description = null)
     {
-        $this->name = $name;
+        if ($name === '') {
+            throw new \InvalidArgumentException("Option name cannot be empty.");
+        }
+        if (!ctype_alpha($name)) {
+            throw new \InvalidArgumentException("Option name must contain only letters. '$name' is invalid.");
+        }
+
+        if ($isRequired && $defaultValue !== null) {
+            throw new \LogicException("Argument '$name' cannot be required and have a default value.");
+        }
+
+        $this->name = strtolower($name);
         $this->isRequired = $isRequired;
         $this->defaultValue = $defaultValue;
         $this->description = $description;
@@ -47,4 +58,13 @@ final class CommandArgument
         return $this->description;
     }
 
+    public static function required(string $name, ?string $description = null): self
+    {
+        return new self($name, true, null, $description);
+    }
+
+    public static function optional(string $name, $default = null, ?string $description = null): self
+    {
+        return new self($name, false, $default, $description);
+    }
 }

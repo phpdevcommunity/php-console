@@ -140,14 +140,14 @@ final class CommandRunner
 
         $arguments = $command->getArguments();
         foreach ($arguments as $key => $argument) {
-            $key = strval($key);
-            if ($argument->isRequired() && empty($commandParser->getArgumentValue($key))) {
+            $key = $argument->getName();
+            if ($argument->isRequired() && (!$commandParser->hasArgument($key) || empty($commandParser->getArgumentValue($key)))) {
                 throw new InvalidArgumentException(sprintf('Argument "%s" is required for command "%s".', $argument->getName(), $command->getName()));
             }
             if ($commandParser->hasArgument($key)) {
-                $argv["--{$argument->getName()}"] = $commandParser->getArgumentValue($key);
+                $argv["--{$key}"] = $commandParser->getArgumentValue($key);
             }else {
-                $argv["--{$argument->getName()}"] = $argument->getDefaultValue();
+                $argv["--{$key}"] = $argument->getDefaultValue();
             }
         }
 

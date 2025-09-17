@@ -11,7 +11,8 @@
   "require": {
     "php": ">=7.4",
     "ext-mbstring": "*",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-ctype": "*"
   },
   "require-dev": {
     "phpdevcommunity/unitester": "^0.1.0@alpha"

@@ -49,7 +49,7 @@ final class Input implements InputInterface
         }
 
         if (!$this->hasOption($name)) {
-            throw new \InvalidArgumentException(sprintf('Option "%s" is not defined.', $name));
+            return null;
         }
         return $this->options[$name];
     }

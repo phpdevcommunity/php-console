@@ -111,6 +111,8 @@ final class ConsoleOutput implements OutputInterface
         }
 
         foreach ($items as $key => $value) {
+            $value = $this->variableToString($value);
+            $value = implode(' ', explode(PHP_EOL, $value));
             $key = str_pad($key, $maxKeyLength, ' ', STR_PAD_RIGHT);
             $this->writeColor($key, 'green');
             $this->write(' : ');
