@@ -363,7 +363,11 @@ final class ConsoleOutput implements OutputInterface
 
     private function geTerminalWidth(): int
     {
-        return ((int)exec('tput cols') ?? 85 - 5);
+        $width = 85;
+        if (getenv('TERM')) {
+            $width = ((int) @exec('tput cols') ?: $width);
+        }
+        return $width - 5;
     }
 
     private function variableToString($variable): string
