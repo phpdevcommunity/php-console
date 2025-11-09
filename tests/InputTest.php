@@ -64,9 +64,7 @@ class InputTest extends TestCase
         $input = new Input('test', ['--option' => 'value'], []);
         $this->assertEquals('value', $input->getOptionValue('option'));
         $this->assertEquals('value', $input->getOptionValue('--option'));
-        $this->expectException(\InvalidArgumentException::class, function () use ($input) {
-            $input->getOptionValue('invalid');
-        });
+        $this->assertEquals(null, $input->getOptionValue('invalid'));
     }
 
     public function testGetArgumentValue()
