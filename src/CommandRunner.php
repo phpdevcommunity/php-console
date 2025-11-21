@@ -47,6 +47,10 @@ final class CommandRunner
 
     public function run(CommandParser $commandParser, OutputInterface $output): int
     {
+        if ($commandParser->hasOption('verbose') || $commandParser->hasOption('v')) {
+            $output->setVerbose(true);
+        }
+
         try {
 
             if ($commandParser->getCommandName() === null || $commandParser->getCommandName() === '--help') {
@@ -162,7 +166,7 @@ final class CommandRunner
         $peakMemoryBytes            = memory_get_peak_usage(true);
         $peakMemoryMB               = round($peakMemoryBytes / 1024 / 1024, 2);
         $duration                   = round($endTime - $startTime, 2);
-        if ($input->getOptionValue('verbose')) {
+        if ($output->isVerbose()) {
             $output->writeln(sprintf(
                 'Execution time: %.2fs; Peak memory usage: %.2f MB',
                 $duration,

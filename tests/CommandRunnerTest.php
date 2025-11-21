@@ -5,7 +5,7 @@ namespace Test\PhpDevCommunity\Console;
 use PhpDevCommunity\Console\CommandParser;
 use PhpDevCommunity\Console\CommandRunner;
 use PhpDevCommunity\Console\Output;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 use Test\PhpDevCommunity\Console\Command\CacheClearCommand;
 use Test\PhpDevCommunity\Console\Command\MakeControllerCommand;
 use Test\PhpDevCommunity\Console\Command\MakeEntityCommand;

@@ -4,7 +4,7 @@ namespace Test\PhpDevCommunity\Console;
 
 use PhpDevCommunity\Console\Argument\CommandArgument;
 use PhpDevCommunity\Console\Output;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 
 class CommandArgumentTest extends TestCase
 {

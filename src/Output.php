@@ -22,6 +22,11 @@ final class Output implements OutputInterface
         $this->output = $output;
     }
 
+    /**
+     * @var bool
+     */
+    private bool $verbose = false;
+
     public function write(string $message): void
     {
         $output = $this->output;
@@ -32,5 +37,15 @@ final class Output implements OutputInterface
     {
         $this->write($message);
         $this->write(PHP_EOL);
+    }
+
+    public function setVerbose(bool $verbose): void
+    {
+        $this->verbose = $verbose;
+    }
+
+    public function isVerbose(): bool
+    {
+        return $this->verbose;
     }
 }

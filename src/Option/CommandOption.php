@@ -60,6 +60,7 @@ final class CommandOption
     public static function flag(string $name, ?string $shortcut = null, ?string $description = null): self {
         return new self($name, $shortcut, $description, true);
     }
+    
     public static function withValue(string $name, ?string $shortcut = null, ?string $description = null): self {
         return new self($name, $shortcut, $description, false);
     }

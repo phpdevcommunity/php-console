@@ -3,7 +3,7 @@
 namespace Test\PhpDevCommunity\Console;
 
 use PhpDevCommunity\Console\CommandParser;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 
 class CommandParserTest extends TestCase
 {

@@ -437,6 +437,391 @@ class UserReportCommand implements CommandInterface
         // Final result
         if ($export) {
             $console->success("Report exported to: $export");
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+
+// Using the constructor
+new CommandArgument(
+    'recipient', // The name of the argument
+    true,        // The argument is required
+    null,        // No default value
+    'The email address of the recipient' // Description
+);
+
+// Using static methods (Recommended)
+CommandArgument::required('recipient', 'The email address of the recipient');
+CommandArgument::optional('recipient', null, 'The email address of the recipient');
+```
+
+If a required argument is not provided, an exception is thrown.
+
+---
+
+### 2 Options
+
+An **option** is a named parameter, often prefixed with a double dash (`--`) or a shortcut (`-`). For example, in the following command:
+
+```bash
+bin/console send-email recipient@example.com --subject "Meeting Reminder"
+```
+
+`--subject` is an option. Options are defined using the `CommandOption` class. Here are the main properties of an option:
+
+##### Example of defining an option:
+
+```php
+use PhpDevCommunity\Console\Option\CommandOption;
+
+new CommandOption(
+    'subject',    // The name of the option
+    's',          // Shortcut
+    'The subject of the email', // Description
+    false         // Not a flag, expects a value
+);
+```
+
+An option with a flag does not accept a value; its mere presence indicates that it is enabled.
+
+---
+
+### 3 Usage in a Command
+
+In a command, arguments and options are defined by overriding the `getArguments()` and `getOptions()` methods from the `CommandInterface`.
+
+##### Example:
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Option\CommandOption;
+
+public function getArguments(): array
+{
+    return [
+        new CommandArgument('recipient', true, null, 'The email address of the recipient'),
+    ];
+}
+
+public function getOptions(): array
+{
+    return [
+        new CommandOption('subject', 's', 'The subject of the email', false),
+    ];
+}
+```
+
+In this example:
+- `recipient` is a required argument.
+- `--subject` (or `-s`) is an option that expects a value.
+
+> [!NOTE]
+> **Global Options**: The options `--help` (`-h`) and `--verbose` (`-v`) are **globally available** for all commands. You **must not** define them manually in your commands, as they are automatically handled by the application.
+
+---
+
+### 4 Validation and Management
+
+Arguments and options are automatically validated when the command is executed. For instance, if a required argument is missing or an attempt is made to access an undefined option, an exception will be thrown.
+
+The `InputInterface` allows you to retrieve these parameters in the `execute` method:
+- Arguments: `$input->getArgumentValue('recipient')`
+- Options: `$input->getOptionValue('subject')` or `$input->hasOption('verbose')`
+
+This ensures clear and consistent management of the parameters passed within your PHP project.
+
+## Handling Different Output Types
+
+Output management provides clear and useful information during command execution. Below is a practical example demonstrating output functionalities.
+
+### Example: Command `UserReportCommand`
+
+This command generates a report for a specific user and uses various output features.
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Command\CommandInterface;
+use PhpDevCommunity\Console\InputInterface;
+use PhpDevCommunity\Console\Option\CommandOption;
+use PhpDevCommunity\Console\Output\ConsoleOutput;
+use PhpDevCommunity\Console\OutputInterface;
+
+class UserReportCommand implements CommandInterface
+{
+    public function getName(): string
+    {
+        return 'user:report';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Generates a detailed report for a specific user.';
+    }
+
+    public function getArguments(): array
+    {
+        return [
+            new CommandArgument('user_id', true, null, 'The ID of the user to generate the report for'),
+        ];
+    }
+
+    public function getOptions(): array
+    {
+        return [
+            new CommandOption('export', 'e', 'Export the report to a file', false),
+        ];
+    }
+
+    public function execute(InputInterface $input, OutputInterface $output): void
+    {
+        $console = new ConsoleOutput($output);
+
+        // Main title
+        $console->title('User Report Generation');
+
+        // Arguments and options
+        $userId = $input->getArgumentValue('user_id');
+        $verbose = $input->hasOption('verbose'); // Available globally
+        $export = $input->hasOption('export') ? $input->getOptionValue('export') : null;
+
+        $console->info("Generating report for User ID: $userId");
+
+        // Simulating user data retrieval
+        $console->spinner();
+        $userData = [
+            'name' => 'John Doe',
+            'email' => 'john.doe@example.com',
+            'active' => true,
+            'roles' => ['admin', 'user']
+        ];
+
+        if ($verbose) {
+            $console->debug('User data retrieved successfully.');
+        }
+
+        // Displaying user data
+        $console->json($userData);
+
+        // Displaying user roles as a list
+        $console->listKeyValues([
+            'Name' => $userData['name'],
+            'Email' => $userData['email'],
+            'Active' => $userData['active'] ? 'Yes' : 'No',
+        ]);
+        $console->list($userData['roles']);
+
+        // Table of recent activities
+        $headers = ['ID', 'Activity', 'Timestamp'];
+        $rows = [
+            ['1', 'Login', '2024-12-22 12:00:00'],
+            ['2', 'Update Profile', '2024-12-22 12:30:00'],
+        ];
+        $console->table($headers, $rows);
+
+        // Progress bar
+        for ($i = 0; $i <= 100; $i += 20) {
+            $console->progressBar(100, $i);
+            usleep(500000);
+        }
+
+        // Final result
+        if ($export) {
+            $console->success("Report exported to: $export");
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+
+// Using the constructor
+new CommandArgument(
+    'recipient', // The name of the argument
+    true,        // The argument is required
+    null,        // No default value
+    'The email address of the recipient' // Description
+);
+
+// Using static methods (Recommended)
+CommandArgument::required('recipient', 'The email address of the recipient');
+CommandArgument::optional('recipient', null, 'The email address of the recipient');
+```
+
+If a required argument is not provided, an exception is thrown.
+
+---
+
+### 2 Options
+
+An **option** is a named parameter, often prefixed with a double dash (`--`) or a shortcut (`-`). For example, in the following command:
+
+```bash
+bin/console send-email recipient@example.com --subject "Meeting Reminder"
+```
+
+`--subject` is an option. Options are defined using the `CommandOption` class. Here are the main properties of an option:
+
+-   **Name (`name`)**: The full name of the option, used with `--`.
+-   **Shortcut (`shortcut`)**: A short alias, used with a single dash (`-`).
+-   **Description (`description`)**: A brief description of the option, useful for help messages.
+-   **Flag (`isFlag`)**: Indicates whether the option is a simple flag (present or absent) or if it accepts a value.
+
+##### Example of defining an option:
+
+```php
+use PhpDevCommunity\Console\Option\CommandOption;
+
+// Using the constructor
+new CommandOption(
+    'subject',    // The name of the option
+    's',          // Shortcut
+    'The subject of the email', // Description
+    false         // Not a flag, expects a value
+);
+
+// Using static methods (Recommended)
+CommandOption::withValue('subject', 's', 'The subject of the email');
+```
+
+An option with a flag does not accept a value; its mere presence indicates that it is enabled.
+
+---
+
+### 3 Usage in a Command
+
+In a command, arguments and options are defined by overriding the `getArguments()` and `getOptions()` methods from the `CommandInterface`.
+
+##### Example:
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Option\CommandOption;
+
+public function getArguments(): array
+{
+    return [
+        CommandArgument::required('recipient', 'The email address of the recipient'),
+    ];
+}
+
+public function getOptions(): array
+{
+    return [
+        CommandOption::withValue('subject', 's', 'The subject of the email'),
+    ];
+}
+```
+
+In this example:
+- `recipient` is a required argument.
+- `--subject` (or `-s`) is an option that expects a value.
+
+> [!NOTE]
+> **Global Options**: The options `--help` (`-h`) and `--verbose` (`-v`) are **globally available** for all commands. You **must not** define them manually in your commands, as they are automatically handled by the application.
+
+---
+
+### 4 Validation and Management
+
+Arguments and options are automatically validated when the command is executed. For instance, if a required argument is missing, an exception will be thrown.
+
+The `InputInterface` allows you to retrieve these parameters in the `execute` method:
+- Arguments: `$input->getArgumentValue('recipient')` (Throws exception if missing and required)
+- Options: `$input->getOptionValue('subject')` (Returns `null` if not present) or `$input->hasOption('verbose')`
+
+This ensures clear and consistent management of the parameters passed within your PHP project.
+
+## Handling Different Output Types
+
+Output management provides clear and useful information during command execution. Below is a practical example demonstrating output functionalities.
+
+### Example: Command `UserReportCommand`
+
+This command generates a report for a specific user and uses various output features.
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Command\CommandInterface;
+use PhpDevCommunity\Console\InputInterface;
+use PhpDevCommunity\Console\Option\CommandOption;
+use PhpDevCommunity\Console\Output\ConsoleOutput;
+use PhpDevCommunity\Console\OutputInterface;
+
+class UserReportCommand implements CommandInterface
+{
+    public function getName(): string
+    {
+        return 'user:report';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Generates a detailed report for a specific user.';
+    }
+
+    public function getArguments(): array
+    {
+        return [
+            CommandArgument::required('user_id', 'The ID of the user to generate the report for'),
+        ];
+    }
+
+    public function getOptions(): array
+    {
+        return [
+            CommandOption::withValue('export', 'e', 'Export the report to a file'),
+        ];
+    }
+
+    public function execute(InputInterface $input, OutputInterface $output): void
+    {
+        $console = new ConsoleOutput($output);
+
+        // Main title
+        $console->title('User Report Generation');
+
+        // Arguments and options
+        $userId = $input->getArgumentValue('user_id');
+        $verbose = $input->hasOption('verbose'); // Available globally
+        $export = $input->getOptionValue('export'); // Returns null if not set
+
+        $console->info("Generating report for User ID: $userId");
+
+        // Simulating user data retrieval
+        $console->spinner();
+        $userData = [
+            'name' => 'John Doe',
+            'email' => 'john.doe@example.com',
+            'active' => true,
+            'roles' => ['admin', 'user']
+        ];
+
+        if ($verbose) {
+            $console->debug('User data retrieved successfully.');
+        }
+
+        // Displaying user data
+        $console->json($userData);
+
+        // Displaying user roles as a list
+        $console->listKeyValues([
+            'Name' => $userData['name'],
+            'Email' => $userData['email'],
+            'Active' => $userData['active'] ? 'Yes' : 'No',
+        ]);
+        $console->list($userData['roles']);
+
+        // Table of recent activities
+        $headers = ['ID', 'Activity', 'Timestamp'];
+        $rows = [
+            ['1', 'Login', '2024-12-22 12:00:00'],
+            ['2', 'Update Profile', '2024-12-22 12:30:00'],
+        ];
+        $console->table($headers, $rows);
+
+        // Progress bar
+        for ($i = 0; $i <= 100; $i += 20) {
+            $console->progressBar(100, $i);
+            usleep(500000);
+        }
+
+        // Final result
+        if ($export) {
+            $console->success("Report exported to: $export");
         } else {
             $console->success('Report generated successfully!');
         }
@@ -453,25 +838,408 @@ class UserReportCommand implements CommandInterface
 
 #### Features Used
 
-1. **Rich Messages**:
-   - `success($message)`: Displays a success message.
-   - `warning($message)`: Displays a warning message.
-   - `error($message)`: Displays a critical error message.
-   - `info($message)`: Displays an informational message.
-   - `title($title)`: Displays a main title.
+1.  **Rich Messages**:
+    *   `success($message)`: Displays a success message.
+    *   `warning($message)`: Displays a warning message.
+    *   `error($message)`: Displays a critical error message.
+    *   `info($message)`: Displays an informational message.
+    *   `debug($message)`: Displays a debug message (only visible with `-v`).
+    *   `title($title)`: Displays a main title.
 
-2. **Structured Output**:
-   - `json($data)`: Displays data in JSON format.
-   - `list($items)`: Displays a simple list.
-   - `listKeyValues($data)`: Displays key-value pairs.
-   - `table($headers, $rows)`: Displays tabular data.
+2.  **Structured Output**:
+    *   `json($data)`: Displays data in JSON format.
+    *   `list($items)`: Displays a simple list.
+    *   `listKeyValues($data)`: Displays key-value pairs.
+    *   `table($headers, $rows)`: Displays tabular data.
 
-3. **Progression and Interactivity**:
-   - `progressBar($total, $current)`: Displays a progress bar.
-   - `spinner()`: Displays a loading spinner.
-   - `confirm($question)`: Prompts for user confirmation.
+3.  **Progression and Interactivity**:
+    *   `progressBar($total, $current)`: Displays a progress bar.
+    *   `spinner()`: Displays a loading spinner.
+    *   `confirm($question)`: Prompts for user confirmation.
+
+### Verbosity and Error Handling
+
+-   **Global Verbosity**: The `-v` or `--verbose` flag is **globally available** for all commands. You do not need to define it. Passing it will enable `debug()` messages.
+-   **Error Handling**: The `error()` method writes messages to `STDERR`, allowing you to separate error output from standard output (useful for piping).
 
 ---
-## License
 
-This library is open-source software licensed under the [MIT license](LICENSE).
+# Documentation en Français
+
+Une bibliothèque PHP légère conçue pour simplifier la gestion des commandes dans les applications console. Cette bibliothèque est sans dépendance et se concentre sur une solution rationalisée et efficace pour créer des outils CLI en PHP.
+
+## Installation
+
+Vous pouvez installer cette bibliothèque via [Composer](https://getcomposer.org/). Assurez-vous que votre projet respecte la version minimale de PHP requise (7.4).
+
+```bash
+composer require phpdevcommunity/php-console
+```
+
+## Prérequis
+
+-   Version PHP 7.4 ou supérieure
+
+## Table des Matières
+
+1.  [Configuration dans une Application PHP](#configuration-dans-une-application-php)
+2.  [Créer une Commande](#créer-une-commande)
+3.  [Définir des Arguments et des Options](#définir-des-arguments-et-des-options)
+4.  [Gérer les Différents Types de Sortie](#gérer-les-différents-types-de-sortie)
+
+---
+
+## Configuration dans une Application PHP
+
+Pour utiliser cette bibliothèque dans n'importe quelle application PHP (Symfony, Laravel, Slim ou autres), créez d'abord un répertoire `bin` dans votre projet. Ensuite, ajoutez un fichier de script, par exemple `bin/console`, avec le contenu suivant :
+
+```php
+#!/usr/bin/php
+<?php
+
+use PhpDevCommunity\Console\CommandParser;
+use PhpDevCommunity\Console\CommandRunner;
+use PhpDevCommunity\Console\Output;
+
+set_time_limit(0);
+
+if (file_exists(dirname(__DIR__) . '/../../autoload.php')) {
+    require dirname(__DIR__) . '/../../autoload.php';
+} elseif (file_exists(dirname(__DIR__) . '/vendor/autoload.php')) {
+    require dirname(__DIR__) . '/vendor/autoload.php';
+} else {
+    die(
+        'Vous devez installer les dépendances du projet avec les commandes suivantes :' . PHP_EOL .
+        'curl -sS https://getcomposer.org/installer | php' . PHP_EOL .
+        'php composer.phar install' . PHP_EOL
+    );
+}
+
+// Pour les frameworks modernes utilisant des conteneurs (ex: Kernel ou App classes),
+// assurez-vous de récupérer le CommandRunner depuis le conteneur après le démarrage de l'application.
+// Exemple pour Symfony :
+//
+// $kernel = new Kernel('dev', true);
+// $kernel->boot();
+// $container = $kernel->getContainer();
+// $app = $container->get(CommandRunner::class);
+
+
+$app = new CommandRunner([]);
+$exitCode = $app->run(new CommandParser(), new Output());
+exit($exitCode);
+```
+
+Par convention, le fichier est nommé `bin/console`, mais vous pouvez choisir le nom que vous préférez. Ce script sert de point d'entrée principal pour vos commandes CLI. Assurez-vous que le fichier est exécutable en lançant la commande suivante :
+
+```bash
+chmod +x bin/console
+```
+
+## Créer une Commande
+
+Pour ajouter une commande à votre application, vous devez créer une classe qui implémente l'interface `CommandInterface`. Voici un exemple d'implémentation pour une commande appelée `send-email` :
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Command\CommandInterface;
+use PhpDevCommunity\Console\InputInterface;
+use PhpDevCommunity\Console\Option\CommandOption;
+use PhpDevCommunity\Console\OutputInterface;
+
+class SendEmailCommand implements CommandInterface
+{
+    public function getName(): string
+    {
+        return 'send-email';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Envoie un email au destinataire spécifié avec un sujet optionnel.';
+    }
+
+    public function getOptions(): array
+    {
+        return [
+            CommandOption::withValue('subject', 's', "Le sujet de l'email"),
+        ];
+    }
+
+    public function getArguments(): array
+    {
+        return [
+            CommandArgument::required('recipient', "L'adresse email du destinataire"),
+        ];
+    }
+
+    public function execute(InputInterface $input, OutputInterface $output): void
+    {
+        // Valider et récupérer l'email du destinataire
+        if (!$input->hasArgument('recipient')) {
+            $output->writeln("Erreur : L'email du destinataire est requis.");
+            return;
+        }
+        $recipient = $input->getArgumentValue('recipient');
+
+        // Valider le format de l'email
+        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+            $output->writeln("Erreur : L'adresse email fournie n'est pas valide.");
+            return;
+        }
+
+        // Récupérer l'option sujet (si fournie)
+        $subject = $input->getOptionValue('subject') ?? 'Pas de sujet';
+
+        // Simuler l'envoi de l'email
+        $output->writeln("Envoi de l'email...");
+        $output->writeln('Destinataire : ' . $recipient);
+        $output->writeln('Sujet : ' . $subject);
+        $output->writeln('Email envoyé avec succès !');
+    }
+}
+```
+
+### Enregistrer la Commande dans `CommandRunner`
+
+Après avoir créé votre commande, vous devez l'enregistrer dans le `CommandRunner` pour qu'elle puisse être exécutée. Voici un exemple :
+
+```php
+use PhpDevCommunity\Console\CommandRunner;
+
+$app = new CommandRunner([
+    new SendEmailCommand()
+]);
+```
+
+Le `CommandRunner` prend un tableau de commandes en paramètre. Chaque commande doit être une instance d'une classe implémentant `CommandInterface`. Une fois enregistrée, la commande peut être appelée depuis la console.
+
+### Exemple d'Utilisation dans le Terminal
+
+1.  **Commande sans option sujet :**
+
+    ```bash
+    bin/console send-email john.doe@example.com
+    ```
+
+    **Sortie :**
+    ```
+    Envoi de l'email...
+    Destinataire : john.doe@example.com
+    Sujet : Pas de sujet
+    Email envoyé avec succès !
+    ```
+
+2.  **Commande avec option sujet :**
+
+    ```bash
+    bin/console send-email john.doe@example.com --subject "Rappel de Réunion"
+    ```
+
+    **Sortie :**
+    ```
+    Envoi de l'email...
+    Destinataire : john.doe@example.com
+    Sujet : Rappel de Réunion
+    Email envoyé avec succès !
+    ```
+
+3.  **Commande avec format d'email invalide :**
+
+    ```bash
+    bin/console send-email invalid-email
+    ```
+
+    **Sortie :**
+    ```
+    Erreur : L'adresse email fournie n'est pas valide.
+    ```
+
+## Définir des Arguments et des Options
+
+Les arguments et les options permettent aux développeurs de personnaliser le comportement d'une commande en fonction des paramètres passés. Ces concepts sont gérés respectivement par les classes `CommandArgument` et `CommandOption`.
+
+---
+
+### 1 Arguments
+
+Un **argument** est un paramètre positionnel passé à une commande. Par exemple :
+
+```bash
+bin/console send-email recipient@example.com
+```
+
+`recipient@example.com` est un argument. Les arguments sont définis via la classe `CommandArgument`. Voici les propriétés principales :
+
+-   **Nom (`name`)** : Le nom unique de l'argument.
+-   **Requis (`isRequired`)** : Indique si l'argument est obligatoire.
+-   **Valeur par défaut (`defaultValue`)** : La valeur utilisée si aucun argument n'est fourni.
+-   **Description (`description`)** : Une brève description de l'argument.
+
+##### Exemple de définition d'un argument :
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+
+// Via le constructeur
+new CommandArgument(
+    'recipient', // Le nom de l'argument
+    true,        // L'argument est requis
+    null,        // Pas de valeur par défaut
+    "L'adresse email du destinataire" // Description
+);
+
+// Via les méthodes statiques (Recommandé)
+CommandArgument::required('recipient', "L'adresse email du destinataire");
+CommandArgument::optional('recipient', null, "L'adresse email du destinataire");
+```
+
+---
+
+### 2 Options
+
+Une **option** est un paramètre nommé, souvent préfixé par un double tiret (`--`) ou un raccourci (`-`). Par exemple :
+
+```bash
+bin/console send-email recipient@example.com --subject "Rappel de Réunion"
+```
+
+`--subject` est une option. Les options sont définies via la classe `CommandOption`. Voici les propriétés principales :
+
+-   **Nom (`name`)** : Le nom complet de l'option.
+-   **Raccourci (`shortcut`)** : Un alias court.
+-   **Description (`description`)** : Une brève description.
+-   **Drapeau (`isFlag`)** : Indique si l'option est un simple drapeau (présent ou absent) ou si elle attend une valeur.
+
+##### Exemple de définition d'une option :
+
+```php
+use PhpDevCommunity\Console\Option\CommandOption;
+
+// Via le constructeur
+new CommandOption(
+    'subject',    // Le nom de l'option
+    's',          // Raccourci
+    "Le sujet de l'email", // Description
+    false         // Ce n'est pas un drapeau, attend une valeur
+);
+
+// Via les méthodes statiques (Recommandé)
+CommandOption::withValue('subject', 's', "Le sujet de l'email");
+```
+
+Une option avec un drapeau n'accepte pas de valeur ; sa simple présence indique qu'elle est activée.
+
+---
+
+### 3 Utilisation dans une Commande
+
+Dans une commande, les arguments et options sont définis en surchargeant les méthodes `getArguments()` et `getOptions()` de l'interface `CommandInterface`.
+
+##### Exemple :
+
+```php
+public function getArguments(): array
+{
+    return [
+        CommandArgument::required('recipient', "L'adresse email du destinataire"),
+    ];
+}
+
+public function getOptions(): array
+{
+    return [
+        CommandOption::withValue('subject', 's', "Le sujet de l'email"),
+    ];
+}
+```
+
+Dans cet exemple :
+- `recipient` est un argument requis.
+- `--subject` (ou `-s`) est une option qui attend une valeur.
+
+> [!NOTE]
+> **Options Globales** : Les options `--help` (`-h`) et `--verbose` (`-v`) sont **disponibles globalement** pour toutes les commandes. Vous **ne devez pas** les définir manuellement dans vos commandes, car elles sont gérées automatiquement par l'application.
+
+---
+
+### 4 Validation et Gestion
+
+Les arguments et options sont automatiquement validés lors de l'exécution de la commande. L'`InputInterface` permet de récupérer ces paramètres dans la méthode `execute` :
+-   Arguments : `$input->getArgumentValue('recipient')` (Lève une exception si manquant et requis)
+-   Options : `$input->getOptionValue('subject')` (Retourne `null` si absent) ou `$input->hasOption('verbose')`
+
+## Gérer les Différents Types de Sortie
+
+La gestion de la sortie fournit des informations claires et utiles pendant l'exécution de la commande.
+
+### Exemple : Commande `UserReportCommand`
+
+```php
+use PhpDevCommunity\Console\Argument\CommandArgument;
+use PhpDevCommunity\Console\Command\CommandInterface;
+use PhpDevCommunity\Console\InputInterface;
+use PhpDevCommunity\Console\Option\CommandOption;
+use PhpDevCommunity\Console\Output\ConsoleOutput;
+use PhpDevCommunity\Console\OutputInterface;
+
+class UserReportCommand implements CommandInterface
+{
+    // ... (méthodes getName, getDescription, getArguments, getOptions comme ci-dessus)
+
+    public function execute(InputInterface $input, OutputInterface $output): void
+    {
+        $console = new ConsoleOutput($output);
+
+        // Titre principal
+        $console->title('Génération du Rapport Utilisateur');
+
+        $userId = $input->getArgumentValue('user_id');
+        $verbose = $input->hasOption('verbose'); // Disponible globalement
+        $export = $input->getOptionValue('export'); // Retourne null si non défini
+
+        $console->info("Génération du rapport pour l'ID Utilisateur : $userId");
+
+        // Spinner
+        $console->spinner();
+
+        if ($verbose) {
+            $console->debug('Données utilisateur récupérées avec succès.');
+        }
+
+        // Affichage des données
+        $console->success('Rapport généré avec succès !');
+    }
+}
+```
+
+#### Fonctionnalités Utilisées
+
+1.  **Messages Riches** :
+    *   `success($message)` : Affiche un message de succès.
+    *   `warning($message)` : Affiche un message d'avertissement.
+    *   `error($message)` : Affiche un message d'erreur critique (sur STDERR).
+    *   `info($message)` : Affiche un message d'information.
+    *   `debug($message)` : Affiche un message de debug (visible uniquement avec `-v`).
+    *   `title($title)` : Affiche un titre principal.
+
+2.  **Sortie Structurée** :
+    *   `json($data)` : Affiche des données au format JSON.
+    *   `list($items)` : Affiche une liste simple.
+    *   `listKeyValues($data)` : Affiche des paires clé-valeur.
+    *   `table($headers, $rows)` : Affiche des données tabulaires.
+
+3.  **Progression et Interactivité** :
+    *   `progressBar($total, $current)` : Affiche une barre de progression.
+    *   `spinner()` : Affiche un spinner de chargement.
+    *   `confirm($question)` : Demande une confirmation à l'utilisateur.
+
+### Verbosité et Gestion des Erreurs
+
+-   **Verbosité Globale** : Le drapeau `-v` ou `--verbose` est **disponible globalement** pour toutes les commandes. Vous n'avez pas besoin de le définir. L'utiliser activera les messages `debug()`.(This line is already `debug`, so no change needed here, but I'll double check the context).
+-   **Gestion des Erreurs** : La méthode `error()` écrit les messages sur `STDERR`, ce qui permet de séparer la sortie d'erreur de la sortie standard (utile pour les pipes).
+
+---
+## Licence
+
+Cette bibliothèque est un logiciel open-source sous licence [MIT](LICENSE).

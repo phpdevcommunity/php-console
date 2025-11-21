@@ -6,7 +6,7 @@ use PhpDevCommunity\Console\Argument\CommandArgument;
 use PhpDevCommunity\Console\Input;
 use PhpDevCommunity\Console\Option\CommandOption;
 use PhpDevCommunity\Console\Output;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 use Test\PhpDevCommunity\Console\Command\FooCommand;
 
 class CommandTest extends TestCase

@@ -3,7 +3,7 @@
 namespace Test\PhpDevCommunity\Console;
 
 use PhpDevCommunity\Console\Output;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 class OutputTest extends TestCase
 {
 

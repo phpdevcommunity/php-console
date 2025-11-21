@@ -4,7 +4,7 @@ namespace Test\PhpDevCommunity\Console;
 
 use PhpDevCommunity\Console\Option\CommandOption;
 use PhpDevCommunity\Console\Output;
-use PhpDevCommunity\UniTester\TestCase;
+use Depo\UniTester\TestCase;
 
 class CommandOptionTest extends TestCase
 {

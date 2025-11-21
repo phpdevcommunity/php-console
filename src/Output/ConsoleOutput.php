@@ -61,7 +61,7 @@ final class ConsoleOutput implements OutputInterface
     public function error(string $message): void
     {
         [$formattedMessage, $lineLength, $color] = $this->formatMessage('ERROR', $message, 'red');
-        $this->outputMessage($formattedMessage, $lineLength, $color);
+        $this->outputMessage($formattedMessage, $lineLength, $color, true);
     }
 
     public function warning(string $message): void
@@ -75,6 +75,16 @@ final class ConsoleOutput implements OutputInterface
         [$formattedMessage, $lineLength, $color] = $this->formatMessage('INFO', $message, 'blue');
         $this->outputMessage($formattedMessage, $lineLength, $color);
     }
+
+    public function debug(string $message): void
+    {
+        if (!$this->output->isVerbose()) {
+            return;
+        }
+        [$formattedMessage, $lineLength, $color] = $this->formatMessage('DEBUG', $message, 'cyan');
+        $this->outputMessage($formattedMessage, $lineLength, $color);
+    }
+
 
     public function title(string $message): void
     {
@@ -92,6 +102,7 @@ final class ConsoleOutput implements OutputInterface
     public function list(array $items): void
     {
         foreach ($items as $item) {
+            $item = $this->variableToString($item);
             $this->write('- ' . $item);
             $this->write(PHP_EOL);
         }
@@ -298,7 +309,7 @@ final class ConsoleOutput implements OutputInterface
         $this->write(PHP_EOL);
     }
 
-    public function writeColor(string $message, ?string $color = null, ?string $background = null): void
+    public function writeColor(string $message, ?string $color = null, ?string $background = null, bool $isError = false): void
     {
 
         $formattedMessage = '';
@@ -312,11 +323,15 @@ final class ConsoleOutput implements OutputInterface
 
         $formattedMessage .= $message . "\033[0m";
 
-        $this->write($formattedMessage);
+        $this->write($formattedMessage, $isError);
     }
 
-    public function write(string $message): void
+    public function write(string $message, bool $isError = false): void
     {
+        if ($isError) {
+            fwrite(STDERR, $message);
+            return;
+        }
         $this->output->write($message);
     }
 
@@ -325,24 +340,24 @@ final class ConsoleOutput implements OutputInterface
         $this->output->writeln($message);
     }
 
-    private function outputMessage($formattedMessage, int $lineLength, string $color): void
+    private function outputMessage($formattedMessage, int $lineLength, string $color, bool $isError = false): void
     {
-        $this->write(PHP_EOL);
-        $this->writeColor(str_repeat(' ', $lineLength), 'white', $color);
-        $this->write(PHP_EOL);
+        $this->write(PHP_EOL, $isError);
+        $this->writeColor(str_repeat(' ', $lineLength), 'white', $color, $isError);
+        $this->write(PHP_EOL, $isError);
 
         if (is_string($formattedMessage)) {
             $formattedMessage = [$formattedMessage];
         }
 
         foreach ($formattedMessage as $line) {
-            $this->writeColor($line, 'white', $color);
+            $this->writeColor($line, 'white', $color, $isError);
         }
 
-        $this->write(PHP_EOL);
-        $this->writeColor(str_repeat(' ', $lineLength), 'white', $color);
-        $this->write(PHP_EOL);
-        $this->write(PHP_EOL);
+        $this->write(PHP_EOL, $isError);
+        $this->writeColor(str_repeat(' ', $lineLength), 'white', $color, $isError);
+        $this->write(PHP_EOL, $isError);
+        $this->write(PHP_EOL, $isError);
     }
 
     private function formatMessage(string $prefix, string $message, string $color): array
@@ -389,5 +404,15 @@ final class ConsoleOutput implements OutputInterface
         }
 
         return var_export($variable, true);
+    }
+
+    public function setVerbose(bool $verbose): void
+    {
+        $this->output->setVerbose($verbose);
+    }
+
+    public function isVerbose(): bool
+    {
+        return  $this->output->isVerbose();
     }
 }
