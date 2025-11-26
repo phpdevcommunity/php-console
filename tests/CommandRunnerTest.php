@@ -53,6 +53,25 @@ class CommandRunnerTest extends TestCase
         $this->assertStringContains( $message, 'Execution time:');
         $this->assertStringContains( $message, 'Peak memory usage:');
         $this->assertEquals(0, $exitCode);
+
+
+        $messages = [];
+        $exitCode = $this->commandRunner->run(new CommandParser(self::createArgv(['app:user:list'])), new Output(function ($message) use(&$messages){
+                $messages[] = $message;
+            })
+        );
+        $this->assertEquals(0, $exitCode);
+        $this->assertEquals('Test OK : User list', $messages[0]);
+        $this->assertEquals('LIMIT : 100', $messages[1]);
+
+        $messages = [];
+        $exitCode = $this->commandRunner->run(new CommandParser(self::createArgv(['app:user:list', '-l', '1000'])), new Output(function ($message) use(&$messages){
+                $messages[] = $message;
+            })
+        );
+        $this->assertEquals(0, $exitCode);
+        $this->assertEquals('Test OK : User list', $messages[0]);
+        $this->assertEquals('LIMIT : 1000', $messages[1]);
     }
 
     private static function createArgv(array $argv): array

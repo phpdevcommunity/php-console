@@ -23,10 +23,7 @@ final class CommandRunner
      */
     private array $commands = [];
 
-    /**
-     * @var CommandInterface
-     */
-    private CommandInterface $defaultCommand;
+    private HelpCommand $defaultCommand;
 
     /**
      * Application constructor.
@@ -117,10 +114,12 @@ final class CommandRunner
             }
         }
 
-        $options[] = new CommandOption('verbose', 'v', 'Enable verbose output', true);
+        $options[] = CommandOption::flag('verbose', 'v', 'Enable verbose output');
         foreach ($options as $option) {
             if ($option->isFlag()) {
                 $argvOptions["--{$option->getName()}"] = false;
+            }elseif ($option->getDefaultValue() !== null) {
+                $argvOptions["--{$option->getName()}"] = $option->getDefaultValue();
             }
         }
         foreach ($commandParser->getOptions() as $name => $value) {
@@ -203,6 +202,10 @@ final class CommandRunner
             if (!$option->isFlag()) {
                 $name = sprintf('%s=VALUE', $name);
             }
+            if ($option->getDefaultValue() !== null) {
+                $name = sprintf('%s (default: %s)', $name, $option->getDefaultValue());
+            }
+
             $options[$name] = $option->getDescription();
         }
         $consoleOutput->listKeyValues($options, true);

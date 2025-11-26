@@ -9,11 +9,17 @@ final class CommandOption
     private ?string $description;
     private bool $isFlag;
 
+    /**
+     * @var bool|float|int|string
+     */
+    private $default = null;
+
     public function __construct(
         string  $name,
         ?string $shortcut = null,
         ?string $description = null,
-        bool    $isFlag = false
+        bool    $isFlag = false,
+        $default = null
     )
     {
 
@@ -31,10 +37,20 @@ final class CommandOption
             throw new \InvalidArgumentException('Shortcut must be a single character and contain only letters. "' . $shortcut . '" is invalid.');
         }
 
+        if (!is_null($default) && !is_scalar($default)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Invalid default value: expected a scalar (int, float, string, or bool), got "%s".',
+                    gettype($default)
+                )
+            );
+        }
+
         $this->name = strtolower($name);
         $this->shortcut = $shortcut !== null ? strtolower($shortcut) : null;
         $this->description = $description;
         $this->isFlag = $isFlag;
+        $this->default = $default;
     }
 
     public function getName(): string
@@ -57,11 +73,17 @@ final class CommandOption
         return $this->isFlag;
     }
 
+    public function getDefaultValue()
+    {
+        return $this->default;
+    }
+
     public static function flag(string $name, ?string $shortcut = null, ?string $description = null): self {
-        return new self($name, $shortcut, $description, true);
+        return new self($name, $shortcut, $description, true, false);
     }
     
-    public static function withValue(string $name, ?string $shortcut = null, ?string $description = null): self {
-        return new self($name, $shortcut, $description, false);
+    public static function withValue(string $name, ?string $shortcut = null, ?string $description = null, $default = null): self {
+        return new self($name, $shortcut, $description, false, $default);
     }
+
 }

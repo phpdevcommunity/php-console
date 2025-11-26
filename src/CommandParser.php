@@ -15,7 +15,7 @@ final class CommandParser
     private array $options = [];
     private array $arguments = [];
 
-    public function __construct(array $argv = null)
+    public function __construct(?array $argv = null)
     {
         $argv = $argv ?? $_SERVER['argv'] ?? [];
         array_shift($argv);
